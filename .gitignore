@@ -1,0 +1,24 @@
+# 编译输出文件
+build/
+MDK-ARM/*/
+*.o
+*.d
+*.crf
+*.htm
+*.dep
+*.map
+*.lst
+*.axf
+*.hex
+*.bin
+
+# 各种IDE配置文件
+.vscode/
+.eide/
+*.uvguix.*
+*.uvoptx
+*.uvprojx
+*.bak
+
+# 官方库文件 (按需取消注释，如果不想传HAL库的话)
+# Drivers/
