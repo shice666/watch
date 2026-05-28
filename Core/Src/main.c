@@ -90,8 +90,6 @@ int main(void)
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
   OLED_Init();
-  OLED_Clear();
-  OLED_Update();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -99,6 +97,10 @@ int main(void)
   while (1)
   {
     time_update();
+    
+    key_scan();
+
+    key_chufa();
 
     oled_show();
     /* USER CODE END WHILE */
