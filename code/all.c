@@ -4,7 +4,7 @@ uint16_t ui_state, ui_state_last = 99;
 uint16_t battery_value = 100;
 uint16_t key1, key2, key3, key4, key1_last, key2_last, key3_last, key4_last;
 uint16_t key_value;
-int select0, select10, select21;
+int select0, select10, select21, select11, select12;
 int year, month, date, hour, minute, second;
 uint16_t select21_state;
 uint32_t cnt21;
@@ -16,8 +16,11 @@ const uint16_t icon_y = 16;
 int icon_x_change;
 uint32_t cnt10;
 int icon_x_change_current;
-uint16_t ui_update_flag;
-
+uint16_t hour_11, minute_11, second_11;
+uint16_t miaobiao_state;
+uint32_t cnt11;
+uint16_t time_clear_state;
+uint32_t cnt11_time;
 
 void oled_show(void)
 {
@@ -122,13 +125,6 @@ void oled_show(void)
     }
     else if (ui_state == 10)
     {
-        ui_update_flag = 0;
-
-        if (ui_state != ui_state_last)
-        {
-            ui_update_flag = 1;
-        }
-
         if (icon_x_change_current != icon_x_change)
         {
             if (HAL_GetTick() - cnt10 > 10)
@@ -151,7 +147,6 @@ void oled_show(void)
                     }
                     icon_x_change_current -= 4;
                 }
-                ui_update_flag = 1;
             }
         }
         OLED_ShowImage(42, 10, 44, 44, biankuang);
@@ -160,21 +155,43 @@ void oled_show(void)
         OLED_ShowImage(icon_x[2], icon_y, 32, 32, menu_icon[2]);
         OLED_ShowImage(icon_x[3], icon_y, 32, 32, menu_icon[3]);
         OLED_ShowImage(icon_x[4], icon_y, 32, 32, menu_icon[4]);
-
-        if (ui_update_flag == 1)
-        {
-            OLED_Update();
-        }
-        
     }
-
-    ui_state_last = ui_state;
-
-    if (ui_state == 0 || ui_state == 20 || ui_state == 21)
+    else if (ui_state == 11)
     {
-        OLED_Update();
+        OLED_Printf(16, 20, OLED_12x24, "%02d:%02d:%02d", hour_11, minute_11, second_11);
+        OLED_Printf(8, 48, OLED_8X16, "开始");
+        OLED_Printf(48, 48, OLED_8X16, "停止");
+        OLED_Printf(88, 48, OLED_8X16, "清除");
+
+        if (select11 == 0)
+        {
+            OLED_ReverseArea(8, 48, 32, 16);
+        }
+        else if (select11 == 1)
+        {
+            OLED_ReverseArea(48, 48, 32, 16);
+        }
+        else if (select11 == 2)
+        {
+            OLED_ReverseArea(88, 48, 32, 16);
+        }
     }
-    
+    else if (ui_state == 12)
+    {
+        OLED_Printf(20, 16, OLED_12x24, "OFF");
+        OLED_Printf(84, 16, OLED_12x24, "ON");
+
+        if (select12 == 0)
+        {
+            OLED_ReverseArea(20, 16, 36, 24);
+        }
+        else
+        {
+            OLED_ReverseArea(84, 16, 24, 24);
+        }
+    }
+    ui_state_last = ui_state;
+    OLED_Update();
 }
 
 void time_update(void)
@@ -240,13 +257,13 @@ void key_chufa(void)
     case 1:
         if (ui_state == 0)
         {
-            select0 = (select0 + 1) % 2;
+            select0 = (select0 - 1 + 2) % 2;
         }
         else if (ui_state == 21)
         {
             if (select21_state == 0)
             {
-                select21 = (select21 + 1) % 6;
+                select21 = (select21 - 1 + 6) % 6;
             }
             else
             {
@@ -290,25 +307,32 @@ void key_chufa(void)
         }
         else if (ui_state == 10)
         {
-            if (select10 < 4)
+            if (select10 > 0)
             {
-                icon_x_change -= 44;
-                select10++;
+                icon_x_change += 44;
+                select10--;
             }
-
+        }
+        else if (ui_state == 11)
+        {
+            select11 = (select11 - 1 + 3) % 3;
+        }
+        else if (ui_state == 12)
+        {
+            select12 = (select12 - 1 + 2) % 2;
         }
 
         break;
     case 2:
         if (ui_state == 0)
         {
-            select0 = (select0 - 1 + 2) % 2;
+            select0 = (select0 + 1) % 2;
         }
         else if (ui_state == 21)
         {
             if (select21_state == 0)
             {
-                select21 = (select21 - 1 + 6) % 6;
+                select21 = (select21 + 1) % 6;
             }
             else
             {
@@ -352,11 +376,19 @@ void key_chufa(void)
         }
         else if (ui_state == 10)
         {
-            if (select10 > 0)
+            if (select10 < 4)
             {
-                icon_x_change += 44;
-                select10--;
+                icon_x_change -= 44;
+                select10++;
             }
+        }
+        else if (ui_state == 11)
+        {
+            select11 = (select11 + 1) % 3;
+        }
+        else if (ui_state == 12)
+        {
+            select12 = (select12 + 1) % 2;
         }
         break;
     case 3:
@@ -395,6 +427,76 @@ void key_chufa(void)
                 cnt21_state = 0;
             }
         }
+        else if (ui_state == 10)
+        {
+            if (select10 == 0)
+            {
+                ui_state = 11;
+            }
+            else if (select10 == 1)
+            {
+                ui_state = 12;
+            }
+            else if (select10 == 2)
+            {
+                ui_state = 13;
+            }
+            else if (select10 == 3)
+            {
+                ui_state = 14;
+            }
+            else if (select10 == 4)
+            {
+                ui_state = 15;
+            }
+        }
+        else if (ui_state == 11)
+        {
+            if (select11 == 0)
+            {
+                if (miaobiao_state == 0)
+                {
+                    miaobiao_state = 1;
+                    if (time_clear_state == 0)
+                    {
+                        time_clear_state = 1;
+                        cnt11 = HAL_GetTick();
+                    }
+                    else
+                    {
+                        cnt11 = HAL_GetTick() - cnt11_time;
+                    }
+                }
+            }
+            else if (select11 == 1)
+            {
+                miaobiao_state = 0;
+            }
+            else if (select11 == 2)
+            {
+                if (miaobiao_state == 0)
+                {
+                    time_clear_state = 0;
+                    hour_11 = 0;
+                    minute_11 = 0;
+                    second_11 = 0;
+                }
+            }
+        }
+        else if (ui_state == 12)
+        {
+            if (select12 == 1)
+            {
+                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
+            }
+            else
+            {
+                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
+            }
+            
+        }
+        
+
         break;
     case 4:
         if (ui_state == 10 || ui_state == 20)
@@ -415,8 +517,24 @@ void key_chufa(void)
             HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
             HAL_RTC_SetDate(&hrtc, &DateToUpdate, RTC_FORMAT_BIN);
         }
+        else if (ui_state == 11 || ui_state == 12 || ui_state == 13 || ui_state == 14 || ui_state == 15)
+        {
+            ui_state = 10;
+        }
+
         break;
     default:
         break;
+    }
+}
+
+void miaobiao(void)
+{
+    if (miaobiao_state == 1)
+    {
+        cnt11_time = HAL_GetTick() - cnt11;
+        hour_11 = cnt11_time / 1000 / (60 * 60);
+        minute_11 = cnt11_time / 1000 % (60 * 60) / 60;
+        second_11 = cnt11_time / 1000 % 60;
     }
 }

@@ -102,6 +102,8 @@ int main(void)
 
     key_chufa();
 
+    miaobiao();
+
     oled_show();
     /* USER CODE END WHILE */
 
