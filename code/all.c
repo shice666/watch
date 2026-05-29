@@ -1,17 +1,23 @@
 #include "allhead.h"
 
-uint16_t ui_state, ui_state_last;
+uint16_t ui_state, ui_state_last = 99;
 uint16_t battery_value = 100;
 uint16_t key1, key2, key3, key4, key1_last, key2_last, key3_last, key4_last;
 uint16_t key_value;
-uint16_t select0, select10, select21;
-uint16_t year, month, date, hour, minute, second;
+int select0, select10, select21;
+int year, month, date, hour, minute, second;
 uint16_t select21_state;
 uint32_t cnt21;
 uint16_t cnt21_state;
-
 RTC_TimeTypeDef sTime = {0};
 RTC_DateTypeDef DateToUpdate = {0};
+uint16_t icon_x[] = {48, 92, 136, 180, 224};
+const uint16_t icon_y = 16;
+int icon_x_change;
+uint32_t cnt10;
+int icon_x_change_current;
+uint16_t ui_update_flag;
+
 
 void oled_show(void)
 {
@@ -27,12 +33,12 @@ void oled_show(void)
         OLED_Printf(96, 48, OLED_8X16, "设置");
         OLED_Printf(88, 4, OLED_6X8, "100%%");
         OLED_ShowImage(112, 0, 16, 16, battery);
-        
+
         if (select0 == 0)
         {
             OLED_ReverseArea(0, 48, 32, 16);
         }
-        else if(select0 == 1)
+        else if (select0 == 1)
         {
             OLED_ReverseArea(96, 48, 32, 16);
         }
@@ -85,7 +91,7 @@ void oled_show(void)
                 cnt21_state = (cnt21_state + 1) % 2;
                 cnt21 = HAL_GetTick();
             }
-            if(cnt21_state == 1)
+            if (cnt21_state == 0)
             {
                 if (select21 == 0)
                 {
@@ -114,9 +120,61 @@ void oled_show(void)
             }
         }
     }
+    else if (ui_state == 10)
+    {
+        ui_update_flag = 0;
+
+        if (ui_state != ui_state_last)
+        {
+            ui_update_flag = 1;
+        }
+
+        if (icon_x_change_current != icon_x_change)
+        {
+            if (HAL_GetTick() - cnt10 > 10)
+            {
+                OLED_Clear();
+                cnt10 = HAL_GetTick();
+                if (icon_x_change > icon_x_change_current)
+                {
+                    for (int i = 0; i < 5; i++)
+                    {
+                        icon_x[i] += 4;
+                    }
+                    icon_x_change_current += 4;
+                }
+                else if (icon_x_change < icon_x_change_current)
+                {
+                    for (int i = 0; i < 5; i++)
+                    {
+                        icon_x[i] -= 4;
+                    }
+                    icon_x_change_current -= 4;
+                }
+                ui_update_flag = 1;
+            }
+        }
+        OLED_ShowImage(42, 10, 44, 44, biankuang);
+        OLED_ShowImage(icon_x[0], icon_y, 32, 32, menu_icon[0]);
+        OLED_ShowImage(icon_x[1], icon_y, 32, 32, menu_icon[1]);
+        OLED_ShowImage(icon_x[2], icon_y, 32, 32, menu_icon[2]);
+        OLED_ShowImage(icon_x[3], icon_y, 32, 32, menu_icon[3]);
+        OLED_ShowImage(icon_x[4], icon_y, 32, 32, menu_icon[4]);
+
+        if (ui_update_flag == 1)
+        {
+            OLED_Update();
+        }
+        
+    }
+
     ui_state_last = ui_state;
+
+    if (ui_state == 0 || ui_state == 20 || ui_state == 21)
+    {
+        OLED_Update();
+    }
     
-    OLED_Update();
 }
 
 void time_update(void)
@@ -207,17 +265,39 @@ void key_chufa(void)
                 if (select21 == 3)
                 {
                     year++;
+                    if (year > 99)
+                    {
+                        year = 0;
+                    }
                 }
                 if (select21 == 4)
                 {
                     month++;
+                    if (month > 12)
+                    {
+                        month = 1;
+                    }
                 }
                 if (select21 == 5)
                 {
                     date++;
-                }                
+                    if (date > 31)
+                    {
+                        date = 1;
+                    }
+                }
             }
         }
+        else if (ui_state == 10)
+        {
+            if (select10 < 4)
+            {
+                icon_x_change -= 44;
+                select10++;
+            }
+
+        }
+
         break;
     case 2:
         if (ui_state == 0)
@@ -228,7 +308,7 @@ void key_chufa(void)
         {
             if (select21_state == 0)
             {
-                select21 = (select21 - 1 + 6) % 6;    
+                select21 = (select21 - 1 + 6) % 6;
             }
             else
             {
@@ -247,19 +327,37 @@ void key_chufa(void)
                 if (select21 == 3)
                 {
                     year--;
+                    if (year < 0)
+                    {
+                        year = 99;
+                    }
                 }
                 if (select21 == 4)
                 {
                     month--;
+                    if (month < 1)
+                    {
+                        month = 12;
+                    }
                 }
                 if (select21 == 5)
                 {
                     date--;
-                }                
-                
+                    if (date < 1)
+                    {
+                        date = 31;
+                    }
+                }
             }
         }
-
+        else if (ui_state == 10)
+        {
+            if (select10 > 0)
+            {
+                icon_x_change += 44;
+                select10--;
+            }
+        }
         break;
     case 3:
         if (ui_state == 0)
@@ -275,15 +373,15 @@ void key_chufa(void)
         }
         else if (ui_state == 20)
         {
-                ui_state = 21;
-                year = DateToUpdate.Year;
-                month = DateToUpdate.Month;
-                date = DateToUpdate.Date;
-                hour = sTime.Hours;
-                minute = sTime.Minutes;
-                second = sTime.Seconds;
-                select21 = 0;
-                select21_state = 0;
+            ui_state = 21;
+            year = DateToUpdate.Year;
+            month = DateToUpdate.Month;
+            date = DateToUpdate.Date;
+            hour = sTime.Hours;
+            minute = sTime.Minutes;
+            second = sTime.Seconds;
+            select21 = 0;
+            select21_state = 0;
         }
         else if (ui_state == 21)
         {
@@ -294,8 +392,8 @@ void key_chufa(void)
             else if (select21_state == 1)
             {
                 select21_state = 0;
+                cnt21_state = 0;
             }
-            
         }
         break;
     case 4:
@@ -322,5 +420,3 @@ void key_chufa(void)
         break;
     }
 }
-
-
