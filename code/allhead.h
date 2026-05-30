@@ -6,6 +6,9 @@
 #include "gpio.h"
 #include "oled.h"
 #include "all.h"
+#include "MPU6050.h"
+#include "math.h"
+
 
 #endif
 

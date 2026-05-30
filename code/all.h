@@ -6,5 +6,6 @@ void time_update(void);
 void key_scan(void);
 void key_chufa(void);
 void miaobiao(void);
+void mpu6050(void);
 
 #endif

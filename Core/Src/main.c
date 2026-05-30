@@ -90,6 +90,7 @@ int main(void)
   MX_RTC_Init();
   /* USER CODE BEGIN 2 */
   OLED_Init();
+  MPU6050_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -103,6 +104,8 @@ int main(void)
     key_chufa();
 
     miaobiao();
+
+    mpu6050();
 
     oled_show();
     /* USER CODE END WHILE */

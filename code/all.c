@@ -21,6 +21,14 @@ uint16_t miaobiao_state;
 uint32_t cnt11;
 uint16_t time_clear_state;
 uint32_t cnt11_time;
+int16_t ax, ay, az, gx, gy, gz;
+double roll_g, pitch_g, yaw_g;
+double roll_a, pitch_a;
+double roll, pitch, yaw;
+double a = 0.9;
+double delta_t = 0.005;
+double pi = 3.1415927;
+uint32_t cnt13;
 
 void oled_show(void)
 {
@@ -190,6 +198,20 @@ void oled_show(void)
             OLED_ReverseArea(84, 16, 24, 24);
         }
     }
+    else if (ui_state == 13)
+    {
+        OLED_Printf(0, 0, OLED_8X16, "roll:%.2f     ", roll);
+        OLED_Printf(0, 16, OLED_8X16, "pitch:%.2f     ", pitch);
+        OLED_Printf(0, 32, OLED_8X16, "yaw:%.2f     ", yaw);
+    }
+    else if (ui_state == 14)
+    {
+        OLED_Clear();
+        OLED_DrawCircle(64, 32, 30, 0);
+        OLED_DrawCircle(64 + roll, 32 - pitch, 3, 1);
+    }
+    
+
     ui_state_last = ui_state;
     OLED_Update();
 }
@@ -493,9 +515,7 @@ void key_chufa(void)
             {
                 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
             }
-            
         }
-        
 
         break;
     case 4:
@@ -536,5 +556,26 @@ void miaobiao(void)
         hour_11 = cnt11_time / 1000 / (60 * 60);
         minute_11 = cnt11_time / 1000 % (60 * 60) / 60;
         second_11 = cnt11_time / 1000 % 60;
+    }
+}
+
+void mpu6050(void)
+{
+    if (HAL_GetTick() - cnt13 > 5)
+    {
+        cnt13 = HAL_GetTick();
+
+        MPU6050_GetData(&ax, &ay, &az, &gx, &gy, &gz);
+
+        roll_g = roll + gx * delta_t;
+        pitch_g = pitch + gy * delta_t;
+        yaw_g = yaw + gz * delta_t;
+
+        pitch_a = atan2(-ax, az) * 180 / pi;
+        roll_a = atan2(ay, az) * 180 / pi;
+
+        roll = roll_g * a + roll_a * (1 - a);
+        pitch = pitch_g * a + pitch_a * (1 - a);
+        yaw = yaw_g * a;
     }
 }
