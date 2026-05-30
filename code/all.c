@@ -210,7 +210,13 @@ void oled_show(void)
         OLED_DrawCircle(64, 32, 30, 0);
         OLED_DrawCircle(64 + roll, 32 - pitch, 3, 1);
     }
-    
+    else if (ui_state == 15)
+    {
+        OLED_Printf(0, 0, OLED_8X16, "start time:");
+        OLED_Printf(0, 16, OLED_8X16, "2026-5-23");
+        OLED_Printf(0, 32, OLED_8X16, "end time:");
+        OLED_Printf(0, 48, OLED_8X16, "2026-5-30");
+    }
 
     ui_state_last = ui_state;
     OLED_Update();
