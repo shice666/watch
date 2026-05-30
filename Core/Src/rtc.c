@@ -1,21 +1,21 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file    rtc.c
-  * @brief   This file provides code for the configuration
-  *          of the RTC instances.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2026 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    rtc.c
+ * @brief   This file provides code for the configuration
+ *          of the RTC instances.
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2026 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "rtc.h"
@@ -52,7 +52,7 @@ void MX_RTC_Init(void)
   }
 
   /* USER CODE BEGIN Check_RTC_BKUP */
-  if (HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR1) != 0x0000)
+  if (HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR1) != 0xA5A5)
   {
   /* USER CODE END Check_RTC_BKUP */
 
@@ -76,7 +76,21 @@ void MX_RTC_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN RTC_Init 2 */
-    HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR1, 0x0000);
+    HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR1, 0xA5A5);
+    HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR2, DateToUpdate.Year);
+    HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR3, DateToUpdate.Month);
+    HAL_RTCEx_BKUPWrite(&hrtc, RTC_BKP_DR4, DateToUpdate.Date);
+  }
+  else
+  {
+    DateToUpdate.Year = HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR2);
+    DateToUpdate.Month = HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR3);
+    DateToUpdate.Date = HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR4);
+
+    if (HAL_RTC_SetDate(&hrtc, &DateToUpdate, RTC_FORMAT_BIN) != HAL_OK)
+    {
+      Error_Handler();
+    }
   }
   /* USER CODE END RTC_Init 2 */
 
